@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "autoname": "field:machine_id",
+ "creation": "2023-01-23 17:07:54.769814",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "machine_id",
+  "section_break_2",
+  "process_attendance_after",
+  "column_break_4",
+  "last_sync_of_checkin"
+ ],
+ "fields": [
+  {
+   "fieldname": "machine_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Machine ID",
+   "reqd": 1,
+   "set_only_once": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "process_attendance_after",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Process Attendance After"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_sync_of_checkin",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Last Sync of Checkin"
+  }
+ ],
+ "links": [],
+ "modified": "2023-01-23 17:18:58.960004",
+ "modified_by": "Administrator",
+ "module": "Biometric Sync",
+ "name": "Biometric Device",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

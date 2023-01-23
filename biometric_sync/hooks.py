@@ -94,9 +94,9 @@ app_license = "GNU GPL v3"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-#	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	"Shift Type": "biometric_sync.overrides.shift_type.CustomShiftType"
+}
 
 # Document Events
 # ---------------
