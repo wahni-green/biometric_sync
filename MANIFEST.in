@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include biometric_sync *.css
+recursive-include biometric_sync *.csv
+recursive-include biometric_sync *.html
+recursive-include biometric_sync *.ico
+recursive-include biometric_sync *.js
+recursive-include biometric_sync *.json
+recursive-include biometric_sync *.md
+recursive-include biometric_sync *.png
+recursive-include biometric_sync *.py
+recursive-include biometric_sync *.svg
+recursive-include biometric_sync *.txt
+recursive-exclude biometric_sync *.pyc
