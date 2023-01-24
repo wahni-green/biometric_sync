@@ -32,6 +32,9 @@ class CustomShiftType(ShiftType):
 				device.process_attendance_after,
 				device.last_sync_of_checkin
 			)
+		
+		for employee in self.get_assigned_employee(self.process_attendance_after, True):
+			self.mark_absent_for_dates_with_no_attendance(employee)
 
 	def process_machine_attendance(self, device, process_attendance_after, last_sync_of_checkin):
 		filters = {
@@ -70,6 +73,3 @@ class CustomShiftType(ShiftType):
 				out_time,
 				self.name,
 			)
-
-		for employee in self.get_assigned_employee(process_attendance_after, True):
-			self.mark_absent_for_dates_with_no_attendance(employee)
