@@ -7,7 +7,7 @@ import frappe
 from frappe.utils import cint, getdate
 from erpnext.hr.doctype.shift_type.shift_type import ShiftType
 from erpnext.hr.doctype.employee_checkin.employee_checkin import (
-	mark_attendance_and_link_log,
+	mark_attendance_and_link_log
 )
 
 
