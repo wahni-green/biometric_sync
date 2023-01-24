@@ -4,12 +4,10 @@
 import itertools
 
 import frappe
-from frappe import _
-from frappe.utils import cint
+from frappe.utils import cint, getdate
 from erpnext.hr.doctype.shift_type.shift_type import ShiftType
 from erpnext.hr.doctype.employee_checkin.employee_checkin import (
-	add_comment_in_checkins,
-	skip_attendance_in_checkins,
+	mark_attendance_and_link_log
 )
 
 
@@ -77,74 +75,35 @@ class CustomShiftType(ShiftType):
 			)
 
 
-def mark_attendance_and_link_log(
-	logs,
-	attendance_status,
-	attendance_date,
-	working_hours=None,
-	late_entry=False,
-	early_exit=False,
-	in_time=None,
-	out_time=None,
-	shift=None,
-):
-	"""Creates an attendance and links the attendance to the Employee Checkin.
-	Note: If attendance is already present for the given date, the logs are marked as skipped and no exception is thrown.
-	:param logs: The List of 'Employee Checkin'.
-	:param attendance_status: Attendance status to be marked. One of: (Present, Absent, Half Day, Skip). Note: 'On Leave' is not supported by this function.
-	:param attendance_date: Date of the attendance to be created.
-	:param working_hours: (optional)Number of working hours for the given date.
-	"""
-	log_names = [x.name for x in logs]
-	employee = logs[0].employee
-	if attendance_status == "Skip":
-		skip_attendance_in_checkins(log_names)
-		return None
-
-	elif attendance_status in ("Present", "Absent", "Half Day"):
-		company = frappe.get_cached_value("Employee", employee, "company")
-		duplicate = frappe.db.get_value(
-			"Attendance",
-			{"employee": employee, "attendance_date": attendance_date, "docstatus": ("!=", "2")},
-			"name"
-		)
-
-		if duplicate:
-			try:
-				frappe.get_doc("Attendance", duplicate).cancel()
-			except Exception:
-				skip_attendance_in_checkins(log_names)
-				add_comment_in_checkins(log_names, duplicate)
-				return None
-
-		doc_dict = {
-			"doctype": "Attendance",
-			"employee": employee,
-			"attendance_date": attendance_date,
-			"status": attendance_status,
-			"working_hours": working_hours,
-			"company": company,
-			"shift": shift,
-			"late_entry": late_entry,
-			"early_exit": early_exit,
-			"in_time": in_time,
-			"out_time": out_time,
-		}
-		attendance = frappe.get_doc(doc_dict).insert()
-		attendance.submit()
-
-		if attendance_status == "Absent":
-			attendance.add_comment(
-				text=_("Employee was marked Absent for not meeting the working hours threshold.")
+def update_late_logs():
+	logs = frappe.db.get_list(
+		"Employee Checkin", fields=["employee", "time", "name", "device_id"],
+		filters={"skip_auto_attendance": 1, "time": (">=", "2023-01-01")}
+	)
+	for d in logs:
+		try:
+			device_id = d.device_id
+			attendance = frappe.db.get_value(
+				"Attendance",
+				{"employee": d.employee, "attendance_date": getdate(d.time), "docstatus": 1},
+				"name"
 			)
-
-		frappe.db.sql(
-			"""update `tabEmployee Checkin`
-			set attendance = %s
-			where name in %s""",
-			(attendance.name, log_names),
-		)
-		return attendance
-
-	else:
-		frappe.throw(_("{} is an invalid Attendance Status.").format(attendance_status))
+			if attendance:
+				device_id = frappe.db.get_value("Employee Checkin", {"attendance": attendance}, "device_id")
+				frappe.get_doc("Attendance", attendance).cancel()
+			frappe.db.set_value("Employee Checkin", d.name, {
+				"skip_auto_attendance": 0,
+				"device_id": device_id
+			})
+			if device_id != d.device_id:
+				frappe.get_doc(
+					{
+						"doctype": "Comment",
+						"comment_type": "Comment",
+						"reference_doctype": "Employee Checkin",
+						"reference_name": d.name,
+						"content": f"Device ID changed from {d.device_id} to {device_id} to process attendance.",
+					}
+				).insert(ignore_permissions=True)
+		except Exception:
+			continue
