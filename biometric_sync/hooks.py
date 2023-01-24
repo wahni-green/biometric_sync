@@ -113,23 +113,11 @@ override_doctype_class = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-#	"all": [
-#		"biometric_sync.tasks.all"
-#	],
-#	"daily": [
-#		"biometric_sync.tasks.daily"
-#	],
-#	"hourly": [
-#		"biometric_sync.tasks.hourly"
-#	],
-#	"weekly": [
-#		"biometric_sync.tasks.weekly"
-#	],
-#	"monthly": [
-#		"biometric_sync.tasks.monthly"
-#	],
-# }
+scheduler_events = {
+	"hourly": [
+		"biometric_sync.overrides.shift_type.update_late_logs"
+	]
+}
 
 # Testing
 # -------

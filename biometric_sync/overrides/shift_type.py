@@ -4,7 +4,7 @@
 import itertools
 
 import frappe
-from frappe.utils import cint
+from frappe.utils import cint, getdate
 from erpnext.hr.doctype.shift_type.shift_type import ShiftType
 from erpnext.hr.doctype.employee_checkin.employee_checkin import (
 	mark_attendance_and_link_log,
@@ -73,3 +73,37 @@ class CustomShiftType(ShiftType):
 				out_time,
 				self.name,
 			)
+
+
+def update_late_logs():
+	logs = frappe.db.get_list(
+		"Employee Checkin", fields=["employee", "time", "name", "device_id"],
+		filters={"skip_auto_attendance": 1, "time": (">=", "2023-01-01")}
+	)
+	for d in logs:
+		try:
+			device_id = d.device_id
+			attendance = frappe.db.get_value(
+				"Attendance",
+				{"employee": d.employee, "attendance_date": getdate(d.time), "docstatus": 1},
+				"name"
+			)
+			if attendance:
+				device_id = frappe.db.get_value("Employee Checkin", {"attendance": attendance}, "device_id")
+				frappe.get_doc("Attendance", attendance).cancel()
+			frappe.db.set_value("Employee Checkin", d.name, {
+				"skip_auto_attendance": 0,
+				"device_id": device_id
+			})
+			if device_id != d.device_id:
+				frappe.get_doc(
+					{
+						"doctype": "Comment",
+						"comment_type": "Comment",
+						"reference_doctype": "Employee Checkin",
+						"reference_name": d.name,
+						"content": f"Device ID changed from {d.device_id} to {device_id} to process attendance.",
+					}
+				).insert(ignore_permissions=True)
+		except Exception:
+			continue
