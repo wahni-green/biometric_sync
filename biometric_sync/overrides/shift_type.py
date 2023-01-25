@@ -4,7 +4,7 @@
 import itertools
 
 import frappe
-from frappe.utils import cint, getdate
+from frappe.utils import add_days, cint, getdate, nowdate
 from erpnext.hr.doctype.shift_type.shift_type import ShiftType
 from erpnext.hr.doctype.employee_checkin.employee_checkin import (
 	mark_attendance_and_link_log
@@ -76,21 +76,27 @@ class CustomShiftType(ShiftType):
 
 
 def update_late_logs():
-	logs = frappe.db.get_list(
+	logs = frappe.db.get_all(
 		"Employee Checkin", fields=["employee", "time", "name", "device_id"],
-		filters={"skip_auto_attendance": 1, "time": (">=", "2023-01-01")}
+		filters={"skip_auto_attendance": 1, "time": (">=", add_days(nowdate(), -3))}
 	)
 	for d in logs:
 		try:
 			device_id = d.device_id
 			attendance = frappe.db.get_value(
 				"Attendance",
-				{"employee": d.employee, "attendance_date": getdate(d.time), "docstatus": 1},
+				{
+					"employee": d.employee,
+					"attendance_date": getdate(d.time),
+					"docstatus": 1,
+					"status": ("!=", "Absent")
+				},
 				"name"
 			)
 			if attendance:
 				device_id = frappe.db.get_value("Employee Checkin", {"attendance": attendance}, "device_id")
 				frappe.get_doc("Attendance", attendance).cancel()
+			device_id = device_id or d.device_id
 			frappe.db.set_value("Employee Checkin", d.name, {
 				"skip_auto_attendance": 0,
 				"device_id": device_id
