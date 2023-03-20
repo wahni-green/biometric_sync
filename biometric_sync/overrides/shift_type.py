@@ -117,9 +117,11 @@ def update_late_logs():
 
 def cancel_attendance(emp, date):
 	return (
-		frappe.db.count('Employee Checkin', {
-			"employee": emp,
-			"time": ["between", [date, date]],
-			"shift": ["is", "set"]
-		}) >= 2
+		len(
+			frappe.get_all("Employee Checkin", filters=[
+				["employee", "=", emp],
+				["time", "between", [date, date]],
+				["shift", "not in", ["", None]],
+			], fields=["name"])
+		) >= 2
 	)
