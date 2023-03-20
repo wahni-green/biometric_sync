@@ -89,11 +89,12 @@ def update_late_logs():
 					"employee": d.employee,
 					"attendance_date": getdate(d.time),
 					"docstatus": 1,
+					# to avoid single checkin log issues, we filter out Absent
 					"status": ("!=", "Absent")
 				},
 				"name"
 			)
-			if attendance:
+			if cancel_attendance(d.employee, getdate(d.time)):
 				device_id = frappe.db.get_value("Employee Checkin", {"attendance": attendance}, "device_id")
 				frappe.get_doc("Attendance", attendance).cancel()
 			device_id = device_id or d.device_id
@@ -113,3 +114,12 @@ def update_late_logs():
 				).insert(ignore_permissions=True)
 		except Exception:
 			continue
+
+def cancel_attendance(emp, date):
+	return (
+		frappe.db.count('Employee Checkin', {
+			"employee": employee,
+			"time": ["between", [date, date]],
+			"shift": ["is", "set"]
+		}) >= 2
+	)
